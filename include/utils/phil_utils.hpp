@@ -9,7 +9,7 @@
 namespace dining_philosophers::utils
 {
 
-#include "Utils.hpp"
+#include "include/utils/Utils.hpp"
 
 using Time_t = std::chrono::milliseconds;
 

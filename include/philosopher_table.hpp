@@ -3,10 +3,10 @@
 #include <vector>
 #include <memory>
 
-#include "phil_utils.hpp"
+#include "include/utils/phil_utils.hpp"
 
-#include "fork.hpp"
-#include "philosopher.hpp"
+#include "include/fork.hpp"
+#include "include/philosopher.hpp"
 
 namespace dining_philosophers
 {

@@ -6,8 +6,8 @@
 #include <mutex>
 #include <memory>
 
-#include "fork.hpp"
-#include "phil_utils.hpp"
+#include "include/fork.hpp"
+#include "include/utils/phil_utils.hpp"
 
 namespace dining_philosophers::philosophers
 {
