@@ -11,13 +11,20 @@ namespace dining_philosophers::utils
 
 #include "include/utils/Utils.hpp"
 
-using Time_t = std::chrono::milliseconds;
+using time_t = std::chrono::milliseconds;
 
 struct time_range
 {
-    Time_t minimum;
-    Time_t maximum;
+    time_t minimum;
+    time_t maximum;
 };
+
+inline time_range make_time_range( time_t min, time_t max )
+{
+    return { min, max };
+}
+
+
 
 struct philosophers_settings
 {
@@ -25,11 +32,19 @@ struct philosophers_settings
     //time_range full_thinking;
     time_range hungry_thinking;
     time_range eating;
+
+    size_t meals_remaining;
 };
 
-inline Time_t rand_between( time_range& range )
+inline philosophers_settings make_philosophers_settings(const std::string & name, const time_range & thinking_range, 
+                                                        const time_range & eating_range, size_t meals_remaining )
 {
-    Time_t time = range.minimum + (Time_t)rand();
+    return { name, thinking_range, eating_range, meals_remaining };
+}
+
+inline time_t rand_between(const time_range& range )
+{
+    time_t time = range.minimum + (time_t)rand();
     time %= (range.maximum - range.minimum);
     return time;
 }
