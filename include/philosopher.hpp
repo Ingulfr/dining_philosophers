@@ -2,8 +2,8 @@
 #pragma warning(disable:4996)
 
 #include <thread>
-#include <condition_variable>
 #include <mutex>
+#include <iterator>
 
 #include "include/fork.hpp"
 #include "include/utils/phil_utils.hpp"
@@ -11,12 +11,11 @@
 namespace dining_philosophers::philosophers
 {
 
-
 class philosopher_t
 {
 using settings      = dining_philosophers::utils::philosophers_settings;
 using synchronizer  = dining_philosophers::utils::synchronizer;
-using time_type     = dining_philosophers::utils::Time_t;
+using time_type     = dining_philosophers::utils::time_t;
 
 using event_log     = dining_philosophers::utils::PhilosopherEventLog;
 using activity_type = dining_philosophers::utils::ActivityType;
@@ -26,9 +25,9 @@ using fork_t        = dining_philosophers::forks::fork_t;
 
 public:
     philosopher_t( const settings & settings, synchronizer & sync,
-                   fork_t & left, fork_t & right, int meals_remaining )
+                   fork_t & left, fork_t & right)
         : m_settings( settings ), m_log( settings.name.c_str() ), m_sync( sync ),
-          m_left_fork( left ),    m_right_fork( right ),          m_meals_remaining( meals_remaining )
+          m_left_fork( left ),    m_right_fork( right )
     {
         m_thread = std::thread( &philosopher_t::start_dinner, this );
     }
@@ -105,7 +104,7 @@ private:
 
         m_log.endActivity( activity_type::eat );
 
-        --m_meals_remaining;
+        --m_settings.meals_remaining;
         m_is_hungry = false;
 
         give_forks();
@@ -115,7 +114,7 @@ private:
     {
         m_sync.wait();
 
-        while ( m_meals_remaining )
+        while ( m_settings.meals_remaining != 0u )
         {
             think();
             if ( take_forks() )
@@ -137,11 +136,28 @@ private:
 
     fork_t & m_right_fork;
 
-    int m_meals_remaining;
-
     bool m_is_done = false;
 
     bool m_is_hungry = false;
 };
+
+
+template<typename Iterator, 
+         typename Distributer = dining_philosophers::forks::forks_distributor,
+         typename Synchronizer = dining_philosophers::utils::synchronizer>
+std::vector<philosopher_t> make_philosophers( Iterator first, Iterator last, Distributer & distributor, Synchronizer & sync )
+{
+    size_t count = std::distance(first, last);
+    std::vector< philosopher_t> philosophers;
+    
+    philosophers.reserve( count );
+
+    for ( auto it = first; it != last; ++it )
+    {
+        philosophers.emplace_back( *it, sync, distributor.left(), distributor.right());
+    }
+
+    return philosophers;
+}
 
 } // namespace dining_philosophers::philosophers
