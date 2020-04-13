@@ -2,19 +2,24 @@
 
 #include <mutex>
 
-class fork_t
+namespace dining_philosophers::forks
 {
-public:
-    bool take()
-    {
-        return locker.try_lock();
-    }
 
-    void give()
+    class fork_t
     {
-        locker.unlock();
-    }
+    public:
+        bool take()
+        {
+            return locker.try_lock();
+        }
 
-private:
-    std::mutex locker;
-};
+        void give()
+        {
+            locker.unlock();
+        }
+
+    private:
+        std::mutex locker;
+    };
+
+} // dining_philosolhers::forks

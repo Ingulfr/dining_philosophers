@@ -3,15 +3,25 @@
 #include <vector>
 #include <memory>
 
-#include "Utils.hpp"
+#include "phil_utils.hpp"
 
 #include "fork.hpp"
 #include "philosopher.hpp"
 
+namespace dining_philosophers
+{
+
 class philosopher_table
 {
+    using settings = dining_philosophers::utils::philosophers_settings;
+    using synchronizer = dining_philosophers::utils::synchronizer;
+
+    using philosopher_t = dining_philosophers::philosophers::philosopher_t;
+
+    using fork_t = dining_philosophers::forks::fork_t;
+
 public:
-    philosopher_table( std::vector<philosophers_settings>::iterator first, std::vector<philosophers_settings>::iterator last, int meals_remaining )
+    philosopher_table( std::vector<settings>::iterator first, std::vector<settings>::iterator last, int meals_remaining )
     {
         size_t count = last - first;
         m_philosophers.reserve( count );
@@ -25,8 +35,8 @@ public:
         for ( auto it = first; it != last; ++it )
         {
             auto ind = it - first;
-            std::shared_ptr<fork_t> left(m_forks[ind]);
-            std::shared_ptr<fork_t> right(m_forks[(ind + 1) % count]);
+            std::shared_ptr<fork_t> left( m_forks[ind] );
+            std::shared_ptr<fork_t> right( m_forks[(ind + 1) % count] );
 
             if ( ind % 2 )
                 swap( left, right );
@@ -35,7 +45,7 @@ public:
         }
     }
 
-    void start_dinner(const int count_philosophers )
+    void start_dinner( const int count_philosophers )
     {
         m_sync.notify_all( count_philosophers );
 
@@ -51,7 +61,7 @@ public:
         do
         {
             is_done = true;
-            ::wait( 50 );
+            dining_philosophers::utils::wait( 50 );
 
             for ( auto& phil : m_philosophers )
             {
@@ -76,3 +86,5 @@ private:
 
     synchronizer m_sync;
 };
+
+} // namespace dining_philosophers

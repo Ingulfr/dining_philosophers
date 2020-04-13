@@ -6,6 +6,11 @@
 #include <mutex>
 #include <atomic>
 
+namespace dining_philosophers::utils
+{
+
+#include "Utils.hpp"
+
 using Time_t = std::chrono::milliseconds;
 
 struct time_range
@@ -39,7 +44,7 @@ public:
         cond_var.wait( lock );
     }
 
-    void notify_all(const int count_philosophers )
+    void notify_all( const int count_philosophers )
     {
         while ( m_wait_philosopers.load( std::memory_order_acquire ) != count_philosophers );
 
@@ -53,3 +58,4 @@ private:
     std::atomic_int m_wait_philosopers = 0;
 };
 
+} // namespace dining_philosophers::utils

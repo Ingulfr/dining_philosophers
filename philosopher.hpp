@@ -6,18 +6,30 @@
 #include <mutex>
 #include <memory>
 
-#include "Utils.hpp"
-
 #include "fork.hpp"
 #include "phil_utils.hpp"
 
+namespace dining_philosophers::philosophers
+{
+
+
 class philosopher_t
 {
+using settings      = dining_philosophers::utils::philosophers_settings;
+using synchronizer  = dining_philosophers::utils::synchronizer;
+using time_type     = dining_philosophers::utils::Time_t;
+
+using event_log     = dining_philosophers::utils::PhilosopherEventLog;
+using activity_type = dining_philosophers::utils::ActivityType;
+
+using fork_t        = dining_philosophers::forks::fork_t;
+
+
 public:
-    philosopher_t( const philosophers_settings& settings, synchronizer & sync, 
+    philosopher_t( const settings & settings, synchronizer & sync,
         std::shared_ptr<fork_t> left, std::shared_ptr<fork_t> right, int meals_remaining )
-        : m_settings( settings ), m_log( settings.name.c_str() ), m_sync(sync), 
-          m_left_fork(left), m_right_fork(right), m_meals_remaining( meals_remaining )
+        : m_settings( settings ), m_log( settings.name.c_str() ), m_sync( sync ),
+        m_left_fork( left ), m_right_fork( right ), m_meals_remaining( meals_remaining )
     {
         m_thread = std::thread( &philosopher_t::start_dinner, this );
     }
@@ -27,7 +39,7 @@ public:
         m_thread.join();
     }
 
-    const PhilosopherEventLog& logger()
+    const event_log & logger()
     {
         return m_log;
     }
@@ -35,17 +47,17 @@ public:
     bool done()
     {
         return m_is_done;
-    }    
+    }
 
 private:
-    void wait( Time_t time )
+    void wait( time_type time )
     {
         std::this_thread::sleep_for( time );
     }
 
     bool take_forks()
     {
-        if( !m_left_fork->take() ) 
+        if ( !m_left_fork->take() )
             return false;
 
         if ( !m_right_fork->take() )
@@ -53,7 +65,7 @@ private:
             m_left_fork->give();
             return false;
         }
-        
+
         return true;
     }
 
@@ -68,31 +80,31 @@ private:
     {
         if ( !m_is_hungry )
         {
-            m_log.startActivity( ActivityType::think );
+            m_log.startActivity( activity_type::think );
 
             this->wait( rand_between( m_settings.hungry_thinking ) );
 
-            m_log.endActivity( ActivityType::think );
+            m_log.endActivity( activity_type::think );
 
             m_is_hungry = true;
 
             return;
         }
 
-        m_log.startActivity( ActivityType::eatFailure );
+        m_log.startActivity( activity_type::eatFailure );
 
         this->wait( rand_between( m_settings.hungry_thinking ) );
 
-        m_log.endActivity( ActivityType::eatFailure );
+        m_log.endActivity( activity_type::eatFailure );
     }
 
     void eat()
     {
-        m_log.startActivity( ActivityType::eat );
+        m_log.startActivity( activity_type::eat );
 
         wait( rand_between( m_settings.eating ) );
 
-        m_log.endActivity( ActivityType::eat );
+        m_log.endActivity( activity_type::eat );
 
         --m_meals_remaining;
         m_is_hungry = false;
@@ -116,11 +128,11 @@ private:
 
     std::thread m_thread;
 
-    philosophers_settings m_settings;
+    settings m_settings;
 
-    PhilosopherEventLog m_log;
+    event_log m_log;
 
-    synchronizer & m_sync;
+    synchronizer& m_sync;
 
     std::shared_ptr<fork_t> m_left_fork;
 
@@ -133,6 +145,4 @@ private:
     bool m_is_hungry = false;
 };
 
-//inline bool philosopher::can_start = false;
-
-//inline std::condition_variable philosopher::start_cond;
+} // namespace dining_philosophers::philosophers

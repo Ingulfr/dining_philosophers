@@ -11,7 +11,7 @@
 using namespace std::chrono_literals;
 
 
-std::vector<philosophers_settings> phil_settings{ { "Socrates", 10ms, 50ms, 30ms, 70ms, },
+std::vector<dining_philosophers::utils::philosophers_settings> phil_settings{ { "Socrates", 10ms, 50ms, 30ms, 70ms, },
                                                   { "Plato", 20ms, 70ms, 25ms, 80ms },
                                                   { "Aristotle", 15ms, 40ms, 10ms, 40ms },
                                                   { "Schopenhauer", 50ms, 100ms, 20ms, 90ms },
@@ -20,6 +20,8 @@ std::vector<philosophers_settings> phil_settings{ { "Socrates", 10ms, 50ms, 30ms
 
 void organize_dinner(const int count_philosophers = 3, const int meals_remaining = 3)
 {
+    using namespace dining_philosophers;
+
     philosopher_table table( phil_settings.begin(), phil_settings.begin() + count_philosophers, meals_remaining );
 
     table.start_dinner( count_philosophers );
