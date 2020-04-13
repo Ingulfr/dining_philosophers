@@ -11,6 +11,8 @@
 namespace dining_philosophers
 {
 
+using dining_philosophers::philosophers::make_philosophers;
+
 class philosopher_table
 {
     using settings         = dining_philosophers::utils::philosophers_settings;
@@ -21,22 +23,16 @@ class philosopher_table
     using fork_t           = dining_philosophers::forks::fork_t;
     using forks_distributor = dining_philosophers::forks::forks_distributor;
 
+
 public:
-    philosopher_table( std::vector<settings>::iterator first, std::vector<settings>::iterator last, int meals_remaining )
-        : m_forks(std::vector<fork_t>( std::distance( first, last ) ) ), distributor(m_forks)
-    {
-        size_t count = last - first;
-        m_philosophers.reserve( count );
+    philosopher_table( std::vector<settings>::iterator first, std::vector<settings>::iterator last)
+        : m_forks( std::vector<fork_t>( std::distance( first, last ) ) ), m_distributor( m_forks ), m_sync(),
+          m_philosophers( make_philosophers( first, last, m_distributor, m_sync ) )
+    { }
 
-        for ( auto it = first; it != last; ++it )
-        {
-            m_philosophers.emplace_back( *it, m_sync, distributor.left(), distributor.right(), meals_remaining );
-        }
-    }
-
-    void start_dinner( const int count_philosophers )
+    void start_dinner( )
     {
-        m_sync.notify_all( count_philosophers );
+        m_sync.notify_all( m_philosophers.size() );
 
         for ( auto& phil : m_philosophers )
         {
@@ -69,13 +65,13 @@ public:
     }
 
 private:
-    std::vector<philosopher_t> m_philosophers;
-
     std::vector<fork_t> m_forks;
 
-    forks_distributor distributor;
+    forks_distributor m_distributor;
 
     synchronizer m_sync;
+
+    std::vector<philosopher_t> m_philosophers;
 };
 
 } // namespace dining_philosophers
