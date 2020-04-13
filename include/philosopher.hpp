@@ -4,7 +4,6 @@
 #include <thread>
 #include <condition_variable>
 #include <mutex>
-#include <memory>
 
 #include "include/fork.hpp"
 #include "include/utils/phil_utils.hpp"
@@ -27,9 +26,9 @@ using fork_t        = dining_philosophers::forks::fork_t;
 
 public:
     philosopher_t( const settings & settings, synchronizer & sync,
-        std::shared_ptr<fork_t> left, std::shared_ptr<fork_t> right, int meals_remaining )
+                   fork_t & left, fork_t & right, int meals_remaining )
         : m_settings( settings ), m_log( settings.name.c_str() ), m_sync( sync ),
-        m_left_fork( left ), m_right_fork( right ), m_meals_remaining( meals_remaining )
+          m_left_fork( left ),    m_right_fork( right ),          m_meals_remaining( meals_remaining )
     {
         m_thread = std::thread( &philosopher_t::start_dinner, this );
     }
@@ -57,12 +56,12 @@ private:
 
     bool take_forks()
     {
-        if ( !m_left_fork->take() )
+        if ( !m_left_fork.take() )
             return false;
 
-        if ( !m_right_fork->take() )
+        if ( !m_right_fork.take() )
         {
-            m_left_fork->give();
+            m_left_fork.give();
             return false;
         }
 
@@ -71,9 +70,9 @@ private:
 
     void give_forks()
     {
-        m_left_fork->give();
+        m_left_fork.give();
 
-        m_right_fork->give();
+        m_right_fork.give();
     }
 
     void think()
@@ -132,11 +131,11 @@ private:
 
     event_log m_log;
 
-    synchronizer& m_sync;
+    synchronizer & m_sync;
 
-    std::shared_ptr<fork_t> m_left_fork;
+    fork_t & m_left_fork;
 
-    std::shared_ptr<fork_t> m_right_fork;
+    fork_t & m_right_fork;
 
     int m_meals_remaining;
 

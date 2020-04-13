@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <memory>
+#include <iterator>
 
 #include "include/utils/phil_utils.hpp"
 
@@ -13,35 +13,24 @@ namespace dining_philosophers
 
 class philosopher_table
 {
-    using settings = dining_philosophers::utils::philosophers_settings;
-    using synchronizer = dining_philosophers::utils::synchronizer;
+    using settings         = dining_philosophers::utils::philosophers_settings;
+    using synchronizer     = dining_philosophers::utils::synchronizer;
 
-    using philosopher_t = dining_philosophers::philosophers::philosopher_t;
+    using philosopher_t    = dining_philosophers::philosophers::philosopher_t;
 
-    using fork_t = dining_philosophers::forks::fork_t;
+    using fork_t           = dining_philosophers::forks::fork_t;
+    using forks_distributor = dining_philosophers::forks::forks_distributor;
 
 public:
     philosopher_table( std::vector<settings>::iterator first, std::vector<settings>::iterator last, int meals_remaining )
+        : m_forks(std::vector<fork_t>( std::distance( first, last ) ) ), distributor(m_forks)
     {
         size_t count = last - first;
         m_philosophers.reserve( count );
-        m_forks.reserve( count );
-
-        for ( size_t i = 0; i < count; ++i )
-        {
-            m_forks.emplace_back( std::make_shared<fork_t>() );
-        }
 
         for ( auto it = first; it != last; ++it )
         {
-            auto ind = it - first;
-            std::shared_ptr<fork_t> left( m_forks[ind] );
-            std::shared_ptr<fork_t> right( m_forks[(ind + 1) % count] );
-
-            if ( ind % 2 )
-                swap( left, right );
-
-            m_philosophers.emplace_back( *it, m_sync, left, right, meals_remaining );
+            m_philosophers.emplace_back( *it, m_sync, distributor.left(), distributor.right(), meals_remaining );
         }
     }
 
@@ -82,7 +71,9 @@ public:
 private:
     std::vector<philosopher_t> m_philosophers;
 
-    std::vector<std::shared_ptr<fork_t>> m_forks;
+    std::vector<fork_t> m_forks;
+
+    forks_distributor distributor;
 
     synchronizer m_sync;
 };
