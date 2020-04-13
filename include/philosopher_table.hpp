@@ -26,9 +26,12 @@ class philosopher_table
 
 public:
     philosopher_table( std::vector<settings>::iterator first, std::vector<settings>::iterator last)
-        : m_forks( std::vector<fork_t>( std::distance( first, last ) ) ), m_distributor( m_forks ), m_sync(),
+        : m_forks( std::vector<fork_t>( std::distance( first, last ) ) ), 
+          m_distributor( m_forks ),
+          m_sync(),
           m_philosophers( make_philosophers( first, last, m_distributor, m_sync ) )
     { }
+
 
     void start_dinner( )
     {
@@ -40,21 +43,6 @@ public:
         }
     }
 
-    void wait_end_dinner()
-    {
-        bool is_done = true;
-        do
-        {
-            is_done = true;
-            dining_philosophers::utils::wait( 50 );
-
-            for ( auto& phil : m_philosophers )
-            {
-                is_done &= phil.done();
-            }
-
-        } while ( !is_done );
-    }
 
     void print_dinner_logs()
     {

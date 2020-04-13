@@ -20,7 +20,7 @@ using utils::make_time_range;
 std::vector<philosophers_settings> generate_philosophers_settings(size_t meals_remaining )
 {
     static std::vector<std::string> names{ "Socrates" ,    "Plato",     "Aristotle",
-                                           "Schopenhauer", "Aristotle", "Wittgenstein" };
+                                           "Schopenhauer", "Nietzsche", "Wittgenstein" };
 
     static std::vector< utils::time_t> thinking_minimum_times{ 10ms, 20ms, 15ms, 50ms,  30ms, 40ms };
     static std::vector< utils::time_t> thinking_maximum_times{ 50ms, 70ms, 40ms, 100ms, 60ms, 90ms };
@@ -49,8 +49,6 @@ void organize_dinner(const int count_philosophers = 3, const size_t meals_remain
     philosopher_table table( phil_settings.begin(), phil_settings.begin() + count_philosophers);
 
     table.start_dinner();
-
-    table.wait_end_dinner();
 
     table.print_dinner_logs();
 }

@@ -4,6 +4,7 @@
 #include <thread>
 #include <mutex>
 #include <iterator>
+#include <cassert>
 
 #include "include/fork.hpp"
 #include "include/utils/phil_utils.hpp"
@@ -24,12 +25,25 @@ using fork_t        = dining_philosophers::forks::fork_t;
 
 
 public:
-    philosopher_t( const settings & settings, synchronizer & sync,
-                   fork_t & left, fork_t & right)
-        : m_settings( settings ), m_log( settings.name.c_str() ), m_sync( sync ),
-          m_left_fork( left ),    m_right_fork( right )
+    philosopher_t( const settings & settings, 
+                   synchronizer & sync,
+                   fork_t & left, 
+                   fork_t & right)
+        : m_settings( settings ), 
+          m_log( settings.name.c_str() ), 
+          m_sync( sync ),
+          m_left_fork( left ), 
+          m_right_fork( right )
     {
         m_thread = std::thread( &philosopher_t::start_dinner, this );
+    }
+
+    philosopher_t( philosopher_t && other ) = default;
+     
+
+    ~philosopher_t()
+    {
+        assert( ("Thread were not joined!", !m_thread.joinable()) );
     }
 
     void join()
@@ -40,11 +54,6 @@ public:
     const event_log & logger()
     {
         return m_log;
-    }
-
-    bool done()
-    {
-        return m_is_done;
     }
 
 private:
@@ -120,8 +129,6 @@ private:
             if ( take_forks() )
                 eat();
         }
-
-        m_is_done = true;
     }
 
     std::thread m_thread;
@@ -135,8 +142,6 @@ private:
     fork_t & m_left_fork;
 
     fork_t & m_right_fork;
-
-    bool m_is_done = false;
 
     bool m_is_hungry = false;
 };
