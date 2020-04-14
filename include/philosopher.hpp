@@ -1,47 +1,69 @@
 #pragma once
 #pragma warning(disable:4996)
 
-#include <thread>
-#include <mutex>
-#include <iterator>
 #include <cassert>
 
+#include <chrono>
+#include <iterator>
+#include <string>
+#include <thread>
+
+
 #include "include/fork.hpp"
-#include "include/utils/phil_utils.hpp"
+#include "include/logger.hpp"
+#include "include/thread_synchronizer.hpp"
 
-namespace dining_philosophers::philosophers
+
+namespace entity
 {
 
-class philosopher_t
+class philosopher
 {
-using settings      = dining_philosophers::utils::philosophers_settings;
-using synchronizer  = dining_philosophers::utils::synchronizer;
-using time_type     = dining_philosophers::utils::time_t;
+private:
+    using synchronizer  = control::thread_synchronizer;
 
-using event_log     = dining_philosophers::utils::PhilosopherEventLog;
-using activity_type = dining_philosophers::utils::ActivityType;
+    using fork          = entity::fork;
 
-using fork_t        = dining_philosophers::forks::fork_t;
-
+    using logger        = event_log::logger;
+    using activity_type = event_log::activity_type;
 
 public:
-    philosopher_t( const settings & settings, 
+    using time_t = std::chrono::milliseconds;
+
+    struct time_range
+    {
+        time_t minimum;
+        time_t maximum;
+    };
+
+    struct settings
+    {
+        std::string name;
+        //time_range full_thinking;
+        time_range hungry_thinking;
+        time_range eating;
+
+        size_t meals_remaining;
+    };
+
+
+    philosopher( const settings & settings, 
                    synchronizer & sync,
-                   fork_t & left, 
-                   fork_t & right)
+                   fork & left, 
+                   fork & right)
         : m_settings( settings ), 
           m_log( settings.name.c_str() ), 
           m_sync( sync ),
           m_left_fork( left ), 
           m_right_fork( right )
     {
-        m_thread = std::thread( &philosopher_t::start_dinner, this );
+        m_thread = std::thread( &philosopher::start_dinner, this );
     }
 
-    philosopher_t( philosopher_t && other ) = default;
+    philosopher( philosopher && other ) = default;
      
 
-    ~philosopher_t()
+    ~philosopher()
     {
         assert( ("Thread were not joined!", !m_thread.joinable()) );
     }
@@ -51,13 +73,20 @@ public:
         m_thread.join();
     }
 
-    const event_log & logger()
+    const logger & get_logger()
     {
         return m_log;
     }
 
 private:
-    void wait( time_type time )
+    time_t rand_between( const time_range & range )
+    {
+        time_t time = range.minimum + (time_t)rand( );
+        time %= (range.maximum - range.minimum);
+        return time;
+    }
+
+    void wait( time_t time )
     {
         std::this_thread::sleep_for( time );
     }
@@ -135,25 +164,26 @@ private:
 
     settings m_settings;
 
-    event_log m_log;
+    logger m_log;
 
     synchronizer & m_sync;
 
-    fork_t & m_left_fork;
+    fork & m_left_fork;
 
-    fork_t & m_right_fork;
+    fork & m_right_fork;
 
     bool m_is_hungry = false;
 };
 
 
+
 template<typename Iterator, 
-         typename Distributer = dining_philosophers::forks::forks_distributor,
-         typename Synchronizer = dining_philosophers::utils::synchronizer>
-std::vector<philosopher_t> make_philosophers( Iterator first, Iterator last, Distributer & distributor, Synchronizer & sync )
+         typename Distributer  = control::distributor,
+         typename Synchronizer = control::thread_synchronizer>
+std::vector<philosopher> make_philosophers( Iterator first, Iterator last, Distributer & distributor, Synchronizer & sync )
 {
     size_t count = std::distance(first, last);
-    std::vector< philosopher_t> philosophers;
+    std::vector< philosopher> philosophers;
     
     philosophers.reserve( count );
 
@@ -165,4 +195,15 @@ std::vector<philosopher_t> make_philosophers( Iterator first, Iterator last, Dis
     return philosophers;
 }
 
-} // namespace dining_philosophers::philosophers
+inline philosopher::time_range make_time_range( philosopher::time_t min, philosopher::time_t max )
+{
+    return { min, max };
+}
+
+inline philosopher::settings make_philosophers_settings( const std::string & name, const philosopher::time_range & thinking_range,
+                                            const philosopher::time_range & eating_range, size_t meals_remaining )
+{
+    return { name, thinking_range, eating_range, meals_remaining };
+}
+
+} // namespace entity
