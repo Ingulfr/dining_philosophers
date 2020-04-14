@@ -4,7 +4,8 @@
 #include <chrono>
 #include <vector>
 
-#include "include/philosopher_table.hpp"
+#include "include/philosopher.hpp"
+#include "include/table.hpp"
 
 
 using namespace std::chrono_literals;
