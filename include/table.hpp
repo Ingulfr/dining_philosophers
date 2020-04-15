@@ -12,23 +12,16 @@
 namespace control
 {
 
-using entity::make_philosophers;
-
 class table
 {
-    using settings = entity::philosopher::settings;
-
-    using philosopher_t = entity::philosopher;
-
-    using fork_t = entity::fork;
-
-
 public:
-    table( std::vector<settings>::iterator first, std::vector<settings>::iterator last )
-        : m_forks( std::vector<fork_t>( std::distance( first, last ) ) ),
+    template<typename Settings = entity::philosopher::settings,
+             typename Iterator = typename std::vector<Settings>::iterator>
+    table( Iterator first, Iterator last )
+        : m_forks( std::vector<entity::fork>( std::distance( first, last ) ) ),
         m_distributor( m_forks ),
         m_sync( ),
-        m_philosophers( make_philosophers( first, last, m_distributor, m_sync ) )
+        m_philosophers( entity::make_philosophers( first, last, m_distributor, m_sync ) )
     { }
 
 
@@ -52,13 +45,13 @@ public:
     }
 
 private:
-    std::vector<fork_t> m_forks;
+    std::vector<entity::fork> m_forks;
 
-    distributor m_distributor;
+    control::distributor m_distributor;
 
-    thread_synchronizer m_sync;
+    control::thread_synchronizer m_sync;
 
-    std::vector<philosopher_t> m_philosophers;
+    std::vector<entity::philosopher> m_philosophers;
 };
 
 } // namespace control
