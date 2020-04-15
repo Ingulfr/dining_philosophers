@@ -9,7 +9,7 @@
 #include <thread>
 
 
-#include "include/fork.hpp"
+#include "include/distributor.hpp"
 #include "include/logger.hpp"
 #include "include/thread_synchronizer.hpp"
 
@@ -22,7 +22,7 @@ class philosopher
 private:
     using synchronizer  = control::thread_synchronizer;
 
-    using fork          = entity::fork;
+    using distributor   = control::distributor;
 
     using logger        = event_log::logger;
     using activity_type = event_log::activity_type;
@@ -43,19 +43,18 @@ public:
         time_range hungry_thinking;
         time_range eating;
 
+        size_t index;
         size_t meals_remaining;
     };
 
 
     philosopher( const settings & settings, 
                    synchronizer & sync,
-                   fork & left, 
-                   fork & right)
+                   distributor  & dist)
         : m_settings( settings ), 
           m_log( settings.name.c_str() ), 
           m_sync( sync ),
-          m_left_fork( left ), 
-          m_right_fork( right )
+          m_distributor(dist)
     {
         m_thread = std::thread( &philosopher::start_dinner, this );
     }
@@ -73,13 +72,13 @@ public:
         m_thread.join();
     }
 
-    const logger & get_logger()
+    const logger & get_logger() const
     {
         return m_log;
     }
 
 private:
-    time_t rand_between( const time_range & range )
+    time_t rand_between( const time_range & range ) const
     {
         time_t time = range.minimum + (time_t)rand( );
         time %= (range.maximum - range.minimum);
@@ -91,72 +90,60 @@ private:
         std::this_thread::sleep_for( time );
     }
 
-    bool take_forks()
+    distributor::forks take_forks()
     {
-        if ( !m_left_fork.take() )
-            return false;
+        return m_distributor.take_forks( m_settings.index );
+    }
 
-        if ( !m_right_fork.take() )
+    void log_activity( activity_type activity )
+    {
+        m_log.startActivity( activity );
+
+        switch( activity )
         {
-            m_left_fork.give();
-            return false;
+        case activity_type::eat:
+            wait( rand_between( m_settings.eating ) );
+            break;
+        case activity_type::eatFailure:
+        case activity_type::think:
+        default:
+            wait( rand_between( m_settings.hungry_thinking ) );
+            break;
         }
 
-        return true;
+        m_log.endActivity( activity );
     }
 
-    void give_forks()
+    void think( activity_type activity )
     {
-        m_left_fork.give();
-
-        m_right_fork.give();
+        log_activity( activity );
     }
 
-    void think()
+    activity_type eat(const distributor::forks & forks,  size_t & meals_remaining )
     {
-        if ( !m_is_hungry )
+        if( forks.is_taken( ) )
         {
-            m_log.startActivity( activity_type::think );
-
-            this->wait( rand_between( m_settings.hungry_thinking ) );
-
-            m_log.endActivity( activity_type::think );
-
-            m_is_hungry = true;
-
-            return;
+            log_activity( activity_type::eat );
+            --meals_remaining;
+            return activity_type::think;
         }
-
-        m_log.startActivity( activity_type::eatFailure );
-
-        this->wait( rand_between( m_settings.hungry_thinking ) );
-
-        m_log.endActivity( activity_type::eatFailure );
-    }
-
-    void eat()
-    {
-        m_log.startActivity( activity_type::eat );
-
-        wait( rand_between( m_settings.eating ) );
-
-        m_log.endActivity( activity_type::eat );
-
-        --m_settings.meals_remaining;
-        m_is_hungry = false;
-
-        give_forks();
+        
+        return activity_type::eatFailure;
     }
 
     void start_dinner()
     {
         m_sync.wait();
 
-        while ( m_settings.meals_remaining != 0u )
+        size_t meals_remaining = m_settings.meals_remaining;
+
+        activity_type activity = activity_type::think;
+
+        while( meals_remaining != 0u )
         {
-            think();
-            if ( take_forks() )
-                eat();
+            think( activity );
+            auto forks = take_forks( );
+            activity = eat(forks, meals_remaining);
         }
     }
 
@@ -168,11 +155,7 @@ private:
 
     synchronizer & m_sync;
 
-    fork & m_left_fork;
-
-    fork & m_right_fork;
-
-    bool m_is_hungry = false;
+    distributor & m_distributor;
 };
 
 
@@ -189,7 +172,7 @@ std::vector<philosopher> make_philosophers( Iterator first, Iterator last, Distr
 
     for ( auto it = first; it != last; ++it )
     {
-        philosophers.emplace_back( *it, sync, distributor.left(), distributor.right());
+        philosophers.emplace_back( *it, sync, distributor);
     }
 
     return philosophers;
@@ -201,9 +184,9 @@ inline philosopher::time_range make_time_range( philosopher::time_t min, philoso
 }
 
 inline philosopher::settings make_philosophers_settings( const std::string & name, const philosopher::time_range & thinking_range,
-                                            const philosopher::time_range & eating_range, size_t meals_remaining )
+                                            const philosopher::time_range & eating_range, size_t index, size_t meals_remaining )
 {
-    return { name, thinking_range, eating_range, meals_remaining };
+    return { name, thinking_range, eating_range, index, meals_remaining };
 }
 
 } // namespace entity
