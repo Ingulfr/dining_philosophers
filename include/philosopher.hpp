@@ -18,14 +18,12 @@
 namespace entity
 {
 
+template<typename T>
+T rand_between( const T & minimum, const T & maximum );
+
 class philosopher
 {
 private:
-    using synchronizer  = control::thread_synchronizer;
-
-    using distributor   = control::distributor;
-
-    using logger        = event_log::logger;
     using activity_type = event_log::activity_type;
 
 public:
@@ -50,8 +48,8 @@ public:
 
 
     philosopher( const settings & settings, 
-                   synchronizer & sync,
-                   distributor  & dist)
+                 control::thread_synchronizer & sync,
+                 control::distributor  & dist)
         : m_settings( settings ), 
           m_log( settings.name.c_str() ), 
           m_sync( sync ),
@@ -73,25 +71,18 @@ public:
         m_thread.join();
     }
 
-    const logger & get_logger() const
+    const event_log::logger & get_logger() const
     {
         return m_log;
     }
 
 private:
-    time_t rand_between( const time_range & range ) const
-    {
-        time_t time = range.minimum + (time_t)rand( );
-        time %= (range.maximum - range.minimum);
-        return std::max(time, range.minimum);
-    }
-
     void wait( time_t time )
     {
         std::this_thread::sleep_for( time );
     }
 
-    distributor::forks take_forks()
+    control::distributor::forks take_forks()
     {
         return m_distributor.take_forks( m_settings.index );
     }
@@ -103,12 +94,12 @@ private:
         switch( activity )
         {
         case activity_type::eat:
-            wait( rand_between( m_settings.eating ) );
+            wait( rand_between( m_settings.eating.minimum, m_settings.eating.maximum ) );
             break;
         case activity_type::eatFailure:
         case activity_type::think:
         default:
-            wait( rand_between( m_settings.hungry_thinking ) );
+            wait( rand_between( m_settings.eating.minimum, m_settings.eating.maximum ) );
             break;
         }
 
@@ -120,7 +111,7 @@ private:
         log_activity( activity );
     }
 
-    activity_type eat(const distributor::forks & forks,  size_t & meals_remaining )
+    activity_type eat(const control::distributor::forks & forks,  size_t & meals_remaining )
     {
         if( forks.is_taken( ) )
         {
@@ -152,11 +143,11 @@ private:
 
     settings m_settings;
 
-    logger m_log;
+    event_log::logger m_log;
 
-    synchronizer & m_sync;
+    control::thread_synchronizer & m_sync;
 
-    distributor & m_distributor;
+    control::distributor & m_distributor;
 };
 
 
@@ -188,6 +179,14 @@ inline philosopher::settings make_philosophers_settings( const std::string & nam
                                             const philosopher::time_range & eating_range, size_t index, size_t meals_remaining )
 {
     return { name, thinking_range, eating_range, index, meals_remaining };
+}
+
+template<typename T>
+T rand_between( const T & minimum, const T & maximum )
+{
+    T time = minimum + (T)rand( );
+    time %= (maximum - minimum);
+    return std::max( time, minimum );
 }
 
 } // namespace entity
