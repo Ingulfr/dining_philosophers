@@ -36,7 +36,7 @@ std::vector<philosophers_settings> generate_philosophers_settings(size_t meals_r
     for ( auto i = 0u; i < names.size(); ++i )
     {
         settings.emplace_back( make_philosophers_settings( names[i], make_time_range( thinking_minimum_times[i], thinking_maximum_times[i]),
-                               make_time_range( eating_minimum_times[i], eating_maximum_times[i]), meals_remaining ) );
+                               make_time_range( eating_minimum_times[i], eating_maximum_times[i]), i, meals_remaining ) );
     }
 
     return settings;
