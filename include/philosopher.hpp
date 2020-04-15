@@ -3,6 +3,7 @@
 
 #include <cassert>
 
+#include <algorithm>
 #include <chrono>
 #include <iterator>
 #include <string>
@@ -82,7 +83,7 @@ private:
     {
         time_t time = range.minimum + (time_t)rand( );
         time %= (range.maximum - range.minimum);
-        return time;
+        return std::max(time, range.minimum);
     }
 
     void wait( time_t time )
