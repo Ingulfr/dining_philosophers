@@ -1,5 +1,7 @@
 #pragma once
 
+#include <atomic>
+#include <functional>
 #include <vector>
 
 #include "include/fork.hpp"
@@ -16,15 +18,24 @@ public:
     class forks
     {
     public:
-        forks( fork & left, fork & right )
-            : m_left( left ), m_right( right )
+        forks( fork & left, fork & right, bool can_take, std::function<void( void )> callback )
+            : m_left( left ),
+            m_right( right ),
+            m_is_taken( can_take ),
+            m_queue_increment( callback )
         {
-            if( m_left.take( ) )
+            if ( can_take )
             {
-                if ( m_right.take( ) )
-                    m_is_taken = true;
+                if ( m_left.take( ) )
+                {
+                    if ( !m_right.take( ) )
+                    {
+                        m_left.give( );
+                        m_is_taken = false;
+                    }
+                }
                 else
-                    m_left.give( );
+                    m_is_taken = false;
             }
         }
 
@@ -34,6 +45,7 @@ public:
             {
                 m_left.give( );
                 m_right.give( );
+                m_queue_increment( );
             }
         }
 
@@ -46,23 +58,33 @@ public:
         fork & m_left;
         fork & m_right;
 
-        bool m_is_taken = false;
+        bool m_is_taken;
+
+        std::function<void( void )> m_queue_increment;
     };
 
 public:
     distributor( std::vector<fork> & forks )
-        : m_forks( forks )
+        : m_forks( forks ),
+          m_eat_queue( m_forks.size( ) )
     { }
 
     forks take_forks( size_t phil_index )
     {
-        return { left( phil_index ), right( phil_index) };
+        bool can_take = check_left_phil( phil_index );
+        auto m_queue_increment = [this, phil_index]( ) { ++m_eat_queue[phil_index]; };
+        return { left( phil_index ), right( phil_index), can_take, m_queue_increment };
     }
 
 private:
     size_t next_index_of( size_t i ) const
     {
         return (i + 1) % m_forks.size( );
+    }
+
+    size_t prev_index_of( size_t i ) const
+    {
+        return (i - 1 + m_forks.size( )) % m_forks.size( );
     }
 
     fork & left( size_t phil_index )
@@ -75,7 +97,15 @@ private:
         return m_forks[(phil_index % 2) ? phil_index : next_index_of( phil_index )];
     }
 
+    bool check_left_phil( size_t phil_ind )
+    {
+        return (m_eat_queue[prev_index_of( phil_ind )].load( std::memory_order_acquire ) >=
+                m_eat_queue[phil_ind].load( std::memory_order_acquire ));
+    }
+
     std::vector<fork> & m_forks;
+
+    std::vector<std::atomic_size_t> m_eat_queue;
 };
 
 } // namespace control
