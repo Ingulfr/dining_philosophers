@@ -1,33 +1,29 @@
 ﻿
 #include <iostream>
 
-#include <chrono>
 #include <vector>
 
 #include "include/philosopher.hpp"
 #include "include/table.hpp"
 
 
-using namespace std::chrono_literals;
 
 using philosophers_settings = entity::philosopher::settings;
 
 using entity::make_philosophers_settings;
-using entity::make_time_range;
 
 
 std::vector<philosophers_settings> generate_philosophers_settings(size_t meals_remaining )
 {
-    using time_t = entity::philosopher::time_t;
 
     static std::vector<std::string> names{ "Socrates" ,    "Plato",     "Aristotle",
                                            "Schopenhauer", "Nietzsche", "Wittgenstein" };
 
-    static std::vector< time_t> thinking_minimum_times{ 10ms, 20ms, 15ms, 50ms,  30ms, 40ms };
-    static std::vector< time_t> thinking_maximum_times{ 50ms, 70ms, 40ms, 100ms, 60ms, 90ms };
+    static std::vector< size_t> thinking_minimum_times{ 10, 20, 15, 50,  30, 40 };
+    static std::vector< size_t> thinking_maximum_times{ 50, 70, 40, 100, 60, 90 };
 
-    static std::vector< time_t> eating_minimum_times  { 30ms, 25ms, 10ms, 20ms,  20ms, 10ms };
-    static std::vector< time_t> eating_maximum_times  { 70ms, 80ms, 40ms, 90ms,  60ms, 90ms };
+    static std::vector< size_t> eating_minimum_times  { 30, 25, 10, 20,  20, 10 };
+    static std::vector< size_t> eating_maximum_times  { 70, 80, 40, 90,  60, 90 };
 
     std::vector<philosophers_settings> settings;
 
@@ -35,8 +31,8 @@ std::vector<philosophers_settings> generate_philosophers_settings(size_t meals_r
 
     for ( auto i = 0u; i < names.size(); ++i )
     {
-        settings.emplace_back( make_philosophers_settings( names[i], make_time_range( thinking_minimum_times[i], thinking_maximum_times[i]),
-                               make_time_range( eating_minimum_times[i], eating_maximum_times[i]), i, meals_remaining ) );
+        settings.emplace_back( make_philosophers_settings( names[i], std::uniform_int_distribution<>( thinking_minimum_times[i], thinking_maximum_times[i]),
+                               std::uniform_int_distribution<>( eating_minimum_times[i], eating_maximum_times[i]), i, meals_remaining ) );
     }
 
     return settings;
