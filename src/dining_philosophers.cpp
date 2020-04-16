@@ -42,10 +42,10 @@ std::vector<philosophers_settings> generate_philosophers_settings(size_t meals_r
     return settings;
 }
 
-void organize_dinner(const int count_philosophers = 3, const size_t meals_remaining = 3)
+void organize_dinner(const int count_philosophers = 3, const size_t meals_remaining = 5)
 {
 
-    std::vector<philosophers_settings> phil_settings( generate_philosophers_settings( meals_remaining ) );
+    std::vector<philosophers_settings> phil_settings( generate_philosophers_settings( count_philosophers ) );
 
     control::table table( phil_settings.begin(), phil_settings.begin() + count_philosophers);
 
