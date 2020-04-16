@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <chrono>
 #include <iterator>
+#include <random>
 #include <string>
 #include <thread>
 
@@ -18,29 +19,23 @@
 namespace entity
 {
 
-template<typename T>
-T rand_between( const T & minimum, const T & maximum );
+template<typename T = size_t>
+T rand_between( std::uniform_int_distribution<T> & distr );
 
 class philosopher
 {
 private:
     using activity_type = event_log::activity_type;
-
-public:
     using time_t = std::chrono::milliseconds;
 
-    struct time_range
-    {
-        time_t minimum;
-        time_t maximum;
-    };
+public:
 
     struct settings
     {
         std::string name;
         //time_range full_thinking;
-        time_range hungry_thinking;
-        time_range eating;
+        std::uniform_int_distribution<> thinking_distr;
+        std::uniform_int_distribution<> eating_distr;
 
         size_t index;
         size_t meals_remaining;
@@ -94,12 +89,12 @@ private:
         switch( activity )
         {
         case activity_type::eat:
-            wait( rand_between( m_settings.eating.minimum, m_settings.eating.maximum ) );
+            wait( std::chrono::milliseconds( rand_between( m_settings.eating_distr ) ) );
             break;
         case activity_type::eatFailure:
         case activity_type::think:
         default:
-            wait( rand_between( m_settings.eating.minimum, m_settings.eating.maximum ) );
+            wait( std::chrono::milliseconds( rand_between( m_settings.thinking_distr ) ) );
             break;
         }
 
@@ -170,23 +165,20 @@ std::vector<philosopher> make_philosophers( Iterator first, Iterator last, Distr
     return philosophers;
 }
 
-inline philosopher::time_range make_time_range( philosopher::time_t min, philosopher::time_t max )
-{
-    return { min, max };
-}
 
-inline philosopher::settings make_philosophers_settings( const std::string & name, const philosopher::time_range & thinking_range,
-                                            const philosopher::time_range & eating_range, size_t index, size_t meals_remaining )
+inline philosopher::settings make_philosophers_settings( const std::string & name, const std::uniform_int_distribution<> &  thinking_distr,
+                                            const std::uniform_int_distribution<> & eating_distr, size_t index, size_t meals_remaining )
 {
-    return { name, thinking_range, eating_range, index, meals_remaining };
+    return { name, std::move(thinking_distr), std::move(eating_distr), index, meals_remaining };
 }
 
 template<typename T>
-T rand_between( const T & minimum, const T & maximum )
+T rand_between( std::uniform_int_distribution<T> & distr )
 {
-    T time = minimum + (T)rand( );
-    time %= (maximum - minimum);
-    return std::max( time, minimum );
+    static std::random_device rd; 
+    static std::mt19937 eng( rd( ) );
+
+    return distr( eng );
 }
 
 } // namespace entity
