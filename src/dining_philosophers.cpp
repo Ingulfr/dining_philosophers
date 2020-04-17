@@ -6,9 +6,10 @@
 #include "include/distributor.hpp"
 #include "include/philosopher.hpp"
 #include "include/table.hpp"
+#include "include/strategies.hpp"
 
-using simple_dist = control::distributor<control::simple_logic>;
-using smart_dist = control::distributor<control::queue_hungers>;
+using simple_dist = control::distributor<control::strategies::simple_logic>;
+using smart_dist = control::distributor<control::strategies::queue_hungers>;
 
 template<typename Distributor>
 using philosophers_settings = typename entity::philosopher<Distributor>::settings;
@@ -62,7 +63,7 @@ void organize_dinner(const int count_philosophers = 3, const size_t meals_remain
 int main()
 {
     std::cout << "queue of hungers logic:\n";
-    organize_dinner<control::queue_hungers>(5);
+    organize_dinner<control::strategies::queue_hungers>(5);
     std::cout << "\n\nsimple logic:\n";
-    organize_dinner<control::simple_logic>( 5 );
+    organize_dinner<control::strategies::simple_logic>( 5 );
 }
