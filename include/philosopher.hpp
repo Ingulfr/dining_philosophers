@@ -5,11 +5,10 @@
 
 #include <algorithm>
 #include <chrono>
-#include <iterator>
-#include <random>
 #include <string>
 #include <thread>
 
+#include "include/details/settings.hpp"
 
 #include "include/distributor.hpp"
 #include "include/logger.hpp"
@@ -19,10 +18,6 @@
 namespace entity
 {
 
-template<typename T = size_t>
-T rand_between( std::uniform_int_distribution<T> & distr );
-
-
 template<typename Distributor>
 class philosopher
 {
@@ -31,20 +26,7 @@ private:
     using time_t = std::chrono::milliseconds;
 
 public:
-
-    struct settings
-    {
-        std::string name;
-        
-        std::uniform_int_distribution<> thinking_distr;
-        std::uniform_int_distribution<> eating_distr;
-
-        size_t index;
-        size_t meals_remaining;
-    };
-
-
-    philosopher( const settings & settings, 
+    philosopher( const control::details::settings & settings, 
                  control::thread_synchronizer & sync,
                  Distributor & dist)
         : m_settings( settings ), 
@@ -91,12 +73,12 @@ private:
         switch( activity )
         {
         case activity_type::eat:
-            wait( std::chrono::milliseconds( /**rand_between( m_settings.eating_distr )*/ 30) );
+            wait( std::chrono::milliseconds( control::details::rand_between( m_settings.eating_distr ) ) );
             break;
         case activity_type::eatFailure:
         case activity_type::think:
         default:
-            wait( std::chrono::milliseconds( /**rand_between( m_settings.thinking_distr )*/ 20 ) );
+            wait( std::chrono::milliseconds( control::details::rand_between( m_settings.thinking_distr ) ) );
             break;
         }
 
@@ -138,7 +120,7 @@ private:
 
     std::thread m_thread;
 
-    settings m_settings;
+    control::details::settings m_settings;
 
     event_log::logger m_log;
 
@@ -165,25 +147,6 @@ std::vector<philosopher<Distributor>> make_philosophers( Iterator first, Iterato
     }
 
     return philosophers;
-}
-
-template<typename Distributor>
-inline typename philosopher<Distributor>::settings make_philosophers_settings( const std::string & name, 
-                                                                               const std::uniform_int_distribution<> &  thinking_distr,
-                                                                               const std::uniform_int_distribution<> & eating_distr, 
-                                                                               size_t index, 
-                                                                               size_t meals_remaining )
-{
-    return { name, std::move(thinking_distr), std::move(eating_distr), index, meals_remaining };
-}
-
-template<typename T>
-T rand_between( std::uniform_int_distribution<T> & distr )
-{
-    static std::random_device rd; 
-    static std::mt19937 eng( rd( ) );
-
-    return distr( eng );
 }
 
 } // namespace entity
