@@ -4,6 +4,7 @@
 #include <functional>
 #include <vector>
 
+#include "include/details/unique_take.hpp"
 #include "include/fork.hpp"
 
 namespace control
@@ -11,41 +12,36 @@ namespace control
 
 class distributor
 {
-private:
-using fork = entity::fork;
-
 public:
     class forks
     {
     public:
-        forks( fork & left, fork & right, bool can_take, std::function<void( void )> callback )
-            : m_left( left ),
-            m_right( right ),
-            m_is_taken( can_take ),
-            m_queue_increment( callback )
+        forks( ) = default;
+
+
+        forks( entity::fork & left, entity::fork & right, std::function<void( void )> callback )
+            : m_left( ),
+              m_right( ),
+              m_is_taken( false ),
+              m_on_destruct( callback )
         {
-            if ( can_take )
+            details::unique_take take_left( left );
+            details::unique_take take_right( right );
+
+            if( take_left && take_right )
             {
-                if ( m_left.take( ) )
-                {
-                    if ( !m_right.take( ) )
-                    {
-                        m_left.give( );
-                        m_is_taken = false;
-                    }
-                }
-                else
-                    m_is_taken = false;
+                m_left     = std::move( take_left );
+                m_right    = std::move( take_right );
+                m_is_taken = true;
+
             }
         }
 
         ~forks( )
         {
-            if ( m_is_taken )
+            if( m_on_destruct && m_is_taken )
             {
-                m_left.give( );
-                m_right.give( );
-                m_queue_increment( );
+                m_on_destruct( );
             }
         }
 
@@ -55,16 +51,16 @@ public:
         }
 
     private:
-        fork & m_left;
-        fork & m_right;
+        details::unique_take m_left;
+        details::unique_take m_right;
 
-        bool m_is_taken;
+        bool m_is_taken = false;;
 
-        std::function<void( void )> m_queue_increment;
+        std::function<void( void )> m_on_destruct;
     };
 
 public:
-    distributor( std::vector<fork> & forks )
+    distributor( std::vector<entity::fork> & forks )
         : m_forks( forks ),
           m_eat_queue( m_forks.size( ) )
     { }
@@ -72,8 +68,12 @@ public:
     forks take_forks( size_t phil_index )
     {
         bool can_take = check_left_phil( phil_index );
-        auto m_queue_increment = [this, phil_index]( ) { ++m_eat_queue[phil_index]; };
-        return { left( phil_index ), right( phil_index), can_take, m_queue_increment };
+        if ( can_take )
+        {
+            return { left( phil_index ), right( phil_index ), [this, phil_index]( ) { ++m_eat_queue[phil_index]; } };
+        }
+        
+        return { };
     }
 
 private:
@@ -87,12 +87,12 @@ private:
         return (i - 1 + m_forks.size( )) % m_forks.size( );
     }
 
-    fork & left( size_t phil_index )
+    entity::fork & left( size_t phil_index )
     {
         return m_forks[(phil_index % 2) ? next_index_of( phil_index ) : phil_index];
     }
 
-    fork & right( size_t phil_index )
+    entity::fork & right( size_t phil_index )
     {
         return m_forks[(phil_index % 2) ? phil_index : next_index_of( phil_index )];
     }
@@ -103,7 +103,7 @@ private:
                 m_eat_queue[phil_ind].load( std::memory_order_acquire ));
     }
 
-    std::vector<fork> & m_forks;
+    std::vector<entity::fork> & m_forks;
 
     std::vector<std::atomic_size_t> m_eat_queue;
 };
