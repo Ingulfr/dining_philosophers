@@ -22,6 +22,8 @@ namespace entity
 template<typename T = size_t>
 T rand_between( std::uniform_int_distribution<T> & distr );
 
+
+template<typename Distributor>
 class philosopher
 {
 private:
@@ -44,7 +46,7 @@ public:
 
     philosopher( const settings & settings, 
                  control::thread_synchronizer & sync,
-                 control::distributor  & dist)
+                 Distributor & dist)
         : m_settings( settings ), 
           m_log( settings.name.c_str() ), 
           m_sync( sync ),
@@ -77,7 +79,7 @@ private:
         std::this_thread::sleep_for( time );
     }
 
-    control::distributor::forks take_forks()
+    typename Distributor::forks take_forks()
     {
         return m_distributor.take_forks( m_settings.index );
     }
@@ -106,7 +108,7 @@ private:
         log_activity( activity );
     }
 
-    activity_type eat(const control::distributor::forks & forks,  size_t & meals_remaining )
+    activity_type eat(const typename Distributor::forks & forks,  size_t & meals_remaining )
     {
         if( forks.is_taken( ) )
         {
@@ -142,18 +144,18 @@ private:
 
     control::thread_synchronizer & m_sync;
 
-    control::distributor & m_distributor;
+    Distributor & m_distributor;
 };
 
 
 
 template<typename Iterator, 
-         typename Distributer  = control::distributor,
+         typename Distributor,
          typename Synchronizer = control::thread_synchronizer>
-std::vector<philosopher> make_philosophers( Iterator first, Iterator last, Distributer & distributor, Synchronizer & sync )
+std::vector<philosopher<Distributor>> make_philosophers( Iterator first, Iterator last, Distributor & distributor, Synchronizer & sync )
 {
     size_t count = std::distance(first, last);
-    std::vector< philosopher> philosophers;
+    std::vector< philosopher<Distributor>> philosophers;
     
     philosophers.reserve( count );
 
@@ -165,9 +167,12 @@ std::vector<philosopher> make_philosophers( Iterator first, Iterator last, Distr
     return philosophers;
 }
 
-
-inline philosopher::settings make_philosophers_settings( const std::string & name, const std::uniform_int_distribution<> &  thinking_distr,
-                                            const std::uniform_int_distribution<> & eating_distr, size_t index, size_t meals_remaining )
+template<typename Distributor>
+inline typename philosopher<Distributor>::settings make_philosophers_settings( const std::string & name, 
+                                                                               const std::uniform_int_distribution<> &  thinking_distr,
+                                                                               const std::uniform_int_distribution<> & eating_distr, 
+                                                                               size_t index, 
+                                                                               size_t meals_remaining )
 {
     return { name, std::move(thinking_distr), std::move(eating_distr), index, meals_remaining };
 }
