@@ -12,11 +12,11 @@
 namespace control
 {
 
+template<typename DistributingStrategy>
 class table
 {
 public:
-    template<typename Settings = entity::philosopher::settings,
-             typename Iterator = typename std::vector<Settings>::iterator>
+    template<typename Iterator>
     table( Iterator first, Iterator last )
         : m_forks( std::vector<entity::fork>( std::distance( first, last ) ) ),
         m_distributor( m_forks ),
@@ -47,11 +47,11 @@ public:
 private:
     std::vector<entity::fork> m_forks;
 
-    control::distributor m_distributor;
+    control::distributor<DistributingStrategy> m_distributor;
 
     control::thread_synchronizer m_sync;
 
-    std::vector<entity::philosopher> m_philosophers;
+    std::vector<entity::philosopher<control::distributor<DistributingStrategy>>> m_philosophers;
 };
 
 } // namespace control
