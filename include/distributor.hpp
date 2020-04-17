@@ -17,6 +17,8 @@ template<typename DistributingStrategy>
 class distributor
 {
 public:
+    using strategy = DistributingStrategy;
+
     distributor( std::vector<entity::fork> & forks )
         : m_forks( forks ),
           m_eat_queue( queue(m_forks.size( ) ) )
