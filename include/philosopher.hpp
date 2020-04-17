@@ -35,7 +35,7 @@ public:
     struct settings
     {
         std::string name;
-        //time_range full_thinking;
+        
         std::uniform_int_distribution<> thinking_distr;
         std::uniform_int_distribution<> eating_distr;
 
@@ -79,7 +79,7 @@ private:
         std::this_thread::sleep_for( time );
     }
 
-    typename Distributor::forks take_forks()
+    typename control::details::forks<typename Distributor::strategy> take_forks()
     {
         return m_distributor.take_forks( m_settings.index );
     }
@@ -91,12 +91,12 @@ private:
         switch( activity )
         {
         case activity_type::eat:
-            wait( std::chrono::milliseconds( rand_between( m_settings.eating_distr ) ) );
+            wait( std::chrono::milliseconds( /**rand_between( m_settings.eating_distr )*/ 30) );
             break;
         case activity_type::eatFailure:
         case activity_type::think:
         default:
-            wait( std::chrono::milliseconds( rand_between( m_settings.thinking_distr ) ) );
+            wait( std::chrono::milliseconds( /**rand_between( m_settings.thinking_distr )*/ 20 ) );
             break;
         }
 
@@ -108,7 +108,7 @@ private:
         log_activity( activity );
     }
 
-    activity_type eat(const typename Distributor::forks & forks,  size_t & meals_remaining )
+    activity_type eat(const control::details::forks<typename Distributor::strategy> & forks,  size_t & meals_remaining )
     {
         if( forks.is_taken( ) )
         {
