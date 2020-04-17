@@ -29,7 +29,7 @@ public:
     {
         if constexpr ( is_queue_hungers::value )
         {
-            bool can_take = check_left_phil( phil_index );
+            bool can_take = check_left_phil( phil_index ) && check_right_phil( phil_index );
 
             if ( can_take )
             {
@@ -82,6 +82,12 @@ private:
                 m_eat_queue.value[phil_ind].load( std::memory_order_acquire ));
     }
 
+    template<typename = std::enable_if_t<is_queue_hungers::value>>
+    bool check_right_phil( size_t phil_ind )
+    {
+        return (m_eat_queue.value[next_index_of( phil_ind )].load( std::memory_order_acquire ) >=
+                 m_eat_queue.value[phil_ind].load( std::memory_order_acquire ));
+    }
 
 
     std::vector<entity::fork> & m_forks;
