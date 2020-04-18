@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <mutex>
 
 namespace entity
@@ -10,16 +11,26 @@ class fork
 public:
     bool take()
     {
-        return locker.try_lock();
+        bool cur_flag = false;
+        if ( m_is_taken.load( std::memory_order::memory_order_acquire ) == false )
+        {
+            m_is_taken.store( true, std::memory_order::memory_order_release );
+            cur_flag = true;
+        }
+
+        return  cur_flag;
     }
 
     void give()
     {
-        locker.unlock();
+        if ( m_is_taken.load( std::memory_order::memory_order_acquire ) == true )
+        {
+            m_is_taken.store( false, std::memory_order::memory_order_release );
+        }
     }
 
 private:
-    std::mutex locker;
+    std::atomic_bool m_is_taken;
 };
 
 } // namespace entity
