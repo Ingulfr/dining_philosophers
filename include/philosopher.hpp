@@ -5,7 +5,7 @@
 
 #include <algorithm>
 #include <chrono>
-#include <iterator>
+#include <memory>
 #include <random>
 #include <string>
 #include <thread>
@@ -77,7 +77,7 @@ private:
         std::this_thread::sleep_for( time );
     }
 
-    control::distributor::forks take_forks()
+    std::unique_ptr<control::distributor::forks> take_forks()
     {
         return m_distributor.take_forks( m_settings.index );
     }
@@ -130,7 +130,7 @@ private:
         {
             think( activity );
             auto forks = take_forks( );
-            activity = eat(forks, meals_remaining);
+            activity = eat(*forks, meals_remaining);
         }
     }
 
