@@ -3,7 +3,7 @@
 #include <vector>
 #include <iterator>
 
-#include "include/distributor.hpp"
+#include "include/distributors.hpp"
 #include "include/fork.hpp"
 #include "include/philosopher.hpp"
 #include "include/thread_synchronizer.hpp"

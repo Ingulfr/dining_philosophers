@@ -11,7 +11,7 @@
 #include <thread>
 
 
-#include "include/distributor.hpp"
+#include "include/distributors.hpp"
 #include "include/logger.hpp"
 #include "include/thread_synchronizer.hpp"
 
