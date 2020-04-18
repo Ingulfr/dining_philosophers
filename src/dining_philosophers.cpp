@@ -38,12 +38,13 @@ std::vector<philosophers_settings> generate_philosophers_settings(size_t meals_r
     return settings;
 }
 
+template<typename Distributor>
 void organize_dinner(const int count_philosophers = 3, const size_t meals_remaining = 5)
 {
 
     std::vector<philosophers_settings> phil_settings( generate_philosophers_settings( count_philosophers ) );
 
-    control::table table( phil_settings.begin(), phil_settings.begin() + count_philosophers);
+    control::table<Distributor> table( phil_settings.begin(), phil_settings.begin() + count_philosophers);
 
     table.start_dinner();
 
@@ -52,5 +53,9 @@ void organize_dinner(const int count_philosophers = 3, const size_t meals_remain
 
 int main()
 {
-    organize_dinner(5);
+    std::cout << "simple logic:\n";
+    organize_dinner<control::distributor>( 5 );
+
+    std::cout << "\nqueue logic:\n";
+    organize_dinner<control::qdistributor>( 5 );
 }
