@@ -26,7 +26,7 @@ private:
     using time_t = std::chrono::milliseconds;
 
 public:
-    philosopher( const control::details::settings & settings, 
+    philosopher( const entity::details::settings & settings,
                  control::thread_synchronizer & sync,
                  Distributor & dist)
         : m_settings( settings ), 
@@ -73,12 +73,12 @@ private:
         switch( activity )
         {
         case activity_type::eat:
-            wait( std::chrono::milliseconds( control::details::rand_between( m_settings.eating_distr ) ) );
+            wait( std::chrono::milliseconds( entity::details::rand_between( m_settings.eating_distr ) ) );
             break;
         case activity_type::eatFailure:
         case activity_type::think:
         default:
-            wait( std::chrono::milliseconds( control::details::rand_between( m_settings.thinking_distr ) ) );
+            wait( std::chrono::milliseconds( entity::details::rand_between( m_settings.thinking_distr ) ) );
             break;
         }
 
@@ -120,7 +120,7 @@ private:
 
     std::thread m_thread;
 
-    control::details::settings m_settings;
+    entity::details::settings m_settings;
 
     event_log::logger m_log;
 

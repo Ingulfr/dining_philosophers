@@ -3,7 +3,7 @@
 #include <random>
 #include <string>
 
-namespace control::details
+namespace entity::details
 {
 
 struct settings

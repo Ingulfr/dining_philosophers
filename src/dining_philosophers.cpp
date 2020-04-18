@@ -14,9 +14,9 @@ using simple_dist = control::distributor<control::strategies::simple_logic>;
 using smart_dist = control::distributor<control::strategies::queue_hungers>;
 
 
-using philosophers_settings = control::details::settings;
+using philosophers_settings = entity::details::settings;
 
-using control::details::make_settings;
+using entity::details::make_settings;
 
 
 std::vector<philosophers_settings> generate_philosophers_settings(size_t meals_remaining )
