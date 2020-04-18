@@ -12,6 +12,7 @@
 namespace control
 {
 
+template<typename Distributor>
 class table
 {
 public:
@@ -47,7 +48,7 @@ public:
 private:
     std::vector<entity::fork> m_forks;
 
-    control::distributor m_distributor;
+    Distributor m_distributor;
 
     control::thread_synchronizer m_sync;
 
