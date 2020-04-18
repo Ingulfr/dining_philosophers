@@ -45,10 +45,12 @@ public:
             }
         }
 
+
         bool is_taken( ) const
         {
             return m_is_taken;
         }
+
 
     private:
         details::unique_take m_left;
@@ -59,6 +61,7 @@ public:
         std::function<void( void )> m_on_destruct;
     };
 
+
 public:
     distributor( std::vector<entity::fork> & forks )
         : m_forks( forks ),
@@ -67,7 +70,7 @@ public:
 
     forks take_forks( size_t phil_index )
     {
-        bool can_take = check_left_phil( phil_index );
+        bool can_take = check_left_phil( phil_index ) && check_right_phil( phil_index );
         if ( can_take )
         {
             return { left( phil_index ), right( phil_index ), [this, phil_index]( ) { ++m_eat_queue[phil_index]; } };
@@ -75,6 +78,7 @@ public:
         
         return { };
     }
+
 
 private:
     size_t next_index_of( size_t i ) const
@@ -87,6 +91,7 @@ private:
         return (i - 1 + m_forks.size( )) % m_forks.size( );
     }
 
+
     entity::fork & left( size_t phil_index )
     {
         return m_forks[(phil_index % 2) ? next_index_of( phil_index ) : phil_index];
@@ -97,11 +102,20 @@ private:
         return m_forks[(phil_index % 2) ? phil_index : next_index_of( phil_index )];
     }
 
+
     bool check_left_phil( size_t phil_ind )
     {
         return (m_eat_queue[prev_index_of( phil_ind )].load( std::memory_order_acquire ) >=
                 m_eat_queue[phil_ind].load( std::memory_order_acquire ));
     }
+
+    bool check_right_phil( size_t phil_ind )
+    {
+        return (m_eat_queue[next_index_of( phil_ind )].load( std::memory_order_acquire ) >=
+                 m_eat_queue[phil_ind].load( std::memory_order_acquire ));
+    }
+
+
 
     std::vector<entity::fork> & m_forks;
 
