@@ -4,8 +4,8 @@
 #include <functional>
 #include <vector>
 
-#include "include/details/unique_take.hpp"
-#include "include/fork.hpp"
+#include "details/unique_take.hpp"
+#include "fork.hpp"
 
 namespace control
 {
@@ -67,7 +67,7 @@ public:
 
     forks take_forks( size_t phil_index )
     {
-        bool can_take = check_left_phil( phil_index );
+        bool can_take = check_left_phil( phil_index ) && check_right_phil( phil_index );
         if ( can_take )
         {
             return { left( phil_index ), right( phil_index ), [this, phil_index]( ) { ++m_eat_queue[phil_index]; } };
@@ -100,6 +100,12 @@ private:
     bool check_left_phil( size_t phil_ind )
     {
         return (m_eat_queue[prev_index_of( phil_ind )].load( std::memory_order_acquire ) >=
+                m_eat_queue[phil_ind].load( std::memory_order_acquire ));
+    }
+
+    bool check_right_phil( size_t phil_ind )
+    {
+        return (m_eat_queue[next_index_of( phil_ind )].load( std::memory_order_acquire ) >=
                 m_eat_queue[phil_ind].load( std::memory_order_acquire ));
     }
 
