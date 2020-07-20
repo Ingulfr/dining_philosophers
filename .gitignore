@@ -39,3 +39,6 @@
 # Pro files
 *vcxproj*
 *sln
+
+#CMake
+*.user
