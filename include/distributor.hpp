@@ -4,10 +4,10 @@
 #include <type_traits>
 #include <vector>
 
-#include "include/details/forks.hpp"
-#include "include/details/unique_take.hpp"
+#include "details/forks.hpp"
+#include "details/unique_take.hpp"
 
-#include "include/fork.hpp"
+#include "fork.hpp"
 
 
 namespace control

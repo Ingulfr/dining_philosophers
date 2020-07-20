@@ -3,12 +3,12 @@
 
 #include <vector>
 
-#include "include/details/settings.hpp"
+#include "details/settings.hpp"
 
-#include "include/distributor.hpp"
-#include "include/philosopher.hpp"
-#include "include/table.hpp"
-#include "include/strategies.hpp"
+#include "distributor.hpp"
+#include "philosopher.hpp"
+#include "table.hpp"
+#include "strategies.hpp"
 
 using simple_dist = control::distributor<control::strategies::simple_logic>;
 using smart_dist = control::distributor<control::strategies::queue_hungers>;

@@ -2,10 +2,10 @@
 
 #include <functional>
 
-#include "include/details/conditional_member.hpp"
+#include "details/conditional_member.hpp"
 
-#include "include/fork.hpp"
-#include "include/strategies.hpp"
+#include "fork.hpp"
+#include "strategies.hpp"
 #include "unique_take.hpp"
 
 namespace control::details

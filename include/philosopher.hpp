@@ -8,11 +8,11 @@
 #include <string>
 #include <thread>
 
-#include "include/details/settings.hpp"
+#include "details/settings.hpp"
 
-#include "include/distributor.hpp"
-#include "include/logger.hpp"
-#include "include/thread_synchronizer.hpp"
+#include "distributor.hpp"
+#include "logger.hpp"
+#include "thread_synchronizer.hpp"
 
 
 namespace entity
