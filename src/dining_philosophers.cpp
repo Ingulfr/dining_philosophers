@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include "include/philosopher.hpp"
-#include "include/table.hpp"
+#include "philosopher.hpp"
+#include "table.hpp"
 
 
 

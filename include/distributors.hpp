@@ -1,7 +1,7 @@
 #pragma once
 
-#include "include/distributors/base_distributor.hpp"
-#include "include/distributors/queue_distributor.hpp"
+#include "distributors/base_distributor.hpp"
+#include "distributors/queue_distributor.hpp"
 
 namespace control
 {

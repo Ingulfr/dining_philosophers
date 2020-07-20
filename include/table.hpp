@@ -3,10 +3,10 @@
 #include <vector>
 #include <iterator>
 
-#include "include/distributors.hpp"
-#include "include/fork.hpp"
-#include "include/philosopher.hpp"
-#include "include/thread_synchronizer.hpp"
+#include "distributors.hpp"
+#include "fork.hpp"
+#include "philosopher.hpp"
+#include "thread_synchronizer.hpp"
 
 
 namespace control

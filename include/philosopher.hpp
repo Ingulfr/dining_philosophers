@@ -11,9 +11,9 @@
 #include <thread>
 
 
-#include "include/distributors.hpp"
-#include "include/logger.hpp"
-#include "include/thread_synchronizer.hpp"
+#include "distributors.hpp"
+#include "logger.hpp"
+#include "thread_synchronizer.hpp"
 
 
 namespace entity

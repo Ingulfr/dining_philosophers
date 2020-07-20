@@ -5,11 +5,11 @@
 #include <memory>
 #include <vector>
 
-#include "include/details/unique_take.hpp"
+#include "details/unique_take.hpp"
 
-#include "include/distributors/base_distributor.hpp"
+#include "distributors/base_distributor.hpp"
 
-#include "include/fork.hpp"
+#include "fork.hpp"
 
 namespace control
 {
