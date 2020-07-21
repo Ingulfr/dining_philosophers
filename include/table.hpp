@@ -3,7 +3,8 @@
 #include <vector>
 #include <iterator>
 
-#include "distributor.hpp"
+
+#include "distributors.hpp"
 #include "fork.hpp"
 #include "philosopher.hpp"
 #include "thread_synchronizer.hpp"
@@ -12,6 +13,7 @@
 namespace control
 {
 
+template<typename Distributor>
 class table
 {
 public:
@@ -47,7 +49,7 @@ public:
 private:
     std::vector<entity::fork> m_forks;
 
-    control::distributor m_distributor;
+    Distributor m_distributor;
 
     control::thread_synchronizer m_sync;
 
